@@ -1,0 +1,663 @@
+openapi: 3.0.1
+info:
+  title: Delilah Resto
+  description: API Backend de un restaurante.
+  contact:
+    email: nombre@mail.com
+  version: 1.0.0
+externalDocs:
+  description: Github Repository
+  url: https://github.com/nombre/delilah-resto
+servers:
+  - url: https://localhost:3000/
+  - url: http://localhost:3000/
+tags:
+  - name: User
+    description: Operaciones acerca de los usuarios
+  - name: Orders
+    description: Operaciones acerca de las ordenes
+  - name: Products
+    description: Operaciones acerca de los productos
+
+paths:
+#USUARIOS
+  /login:
+    post:
+      tags:
+        - User
+      summary: Loguear usuarios
+      description: loguea usuario con username y password
+      operationId: Login
+      requestBody:
+        description: Login user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login'
+        required: true
+      security: []
+      responses:
+        200:
+          description: Token generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        400:
+          description: Información incompleta o petición mal formulada
+        default:
+          $ref: "#/components/responses/Default"
+          
+  /createUser:
+    post:
+      tags:
+        - User
+      summary: Crear usuario
+      description: Crea nuevos usuarios en la base de datos
+      operationId: createUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createUser'
+        required: true
+      security: []
+      responses:
+        200:
+          description: Usuario creado correctamente
+        400:
+          description: Información incompleta o petición mal formulada
+        default:
+          $ref: "#/components/responses/Default"
+
+  /getUser:
+    get:
+      tags:
+        - User
+      summary: Obtener usuarios
+      description: obtiene todos los usuarios
+      operationId: getUser
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Usuarios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createUser'
+        400:
+          description: Información incompleta o petición mal formulada
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        default:
+          $ref: "#/components/responses/Default"
+  
+  /updateUser/:id:
+    put:
+      tags:
+        - User
+      summary: Crear usuario
+      description: Crea nuevos usuarios en la base de datos
+      operationId: putUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateUser'
+        required: true
+      parameters:
+        - name: id
+          in: query
+          example: id=1
+          description: Necesitamos la identificacion de la orden.
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Actualización realizada correctamente al username
+        400:
+          description: Información incompleta o petición mal formulada
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        default:
+          $ref: "#/components/responses/Default"
+          
+  /deleteUser/:id:
+    delete:
+      tags:
+        - User
+      summary: Crear usuario
+      description: Crea nuevos usuarios en la base de datos
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: query
+          example: id=1
+          description: Necesitamos la identificacion de la orden.
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Usuario eliminado por id
+        400:
+          description: Información incompleta o petición mal formulada
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        default:
+          $ref: "#/components/responses/Default"  
+#ORDENES
+  /v1/addOrder/:id:
+    post:
+      tags:
+        - Orders
+      summary: Agrega una orden
+      description: Agrega ordenes de acuerdo a los productos seleccionados
+      operationId: addOrder
+      requestBody:
+        description: Order to create
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/addOrder"
+        required: true
+      responses:
+        201:
+          description: Orden agregada correctamente
+        400:
+          description: Información incompleta o petición mal formulada
+        default:
+          $ref: "#/components/responses/Default"
+          
+  /v1/getOrders:
+    get:
+      tags:
+        - Orders
+      summary: Obtener ordenes
+      description: Permite consultar las ordenes
+      operationId: getOrders
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Consulta exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        400:
+          description: Información incompleta o petición mal formulada
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        default:
+          $ref: "#/components/responses/Default"
+
+  /v1/updateOrder/:id:
+    put:
+      tags:
+        - Orders
+      summary: Actualiza la orden (solo Admin)
+      description: Actualiza toda la información de la orden de acuerdo a la id de la orden
+      operationId: updateOrder
+      parameters:
+        - name: id
+          in: query
+          example: id=1
+          description: Necesitamos la identificacion de la orden.
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: updateOrder
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: Entregado
+        required: true
+      responses:
+        200:
+          description: "Orden ${id} fue modificada correctamente"
+        400:
+          description: "No se envio identificacion o estatus"
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        404:
+          description: "Error actualizando orden ${id}"
+        default:
+          $ref: "#/components/responses/Default"
+          
+  /v1/deleteOrder/:id:
+    delete:
+      tags:
+        - Orders
+      summary: Eliminar orden (solo Admin)
+      description: Elimina una orden por la identificacion.
+      parameters:
+        - name: id
+          in: query
+          example: id=1
+          description: Necesitamos la identificacion de la orden.
+          required: true
+          schema:
+            type: string
+      operationId: deleteOrder
+      responses:
+        200:
+          description: "Se elimino la orden ${id} correctamente"
+        400:
+          description: "Error intentando borrar orden ${id}"
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        default:
+          $ref: "#/components/responses/Default"
+  
+#PRODUCTOS
+  /v1/getProducts:
+    get:
+      tags:
+        - Products
+      summary: Obtiene todos los productos
+      description: Devuelve una lista de productos
+      operationId: getProducts
+      parameters:
+        - name: search
+          in: query
+          description: busca todos los productos
+          schema:
+            type: string
+      responses:
+        200:
+          description: Busqueda exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Products'
+        400:
+          description: Error buscando informacion
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        default:
+          $ref: "#/components/responses/Default"
+
+  /v1/getProducts/:id:
+    get:
+      tags:
+        - Products
+      summary: Consultar productos
+      description: Consulta todos los productos por identificacion
+      parameters:
+        - name: id
+          in: query
+          example: id=1
+          description: Necesitamos la identificacion del producto.
+          required: true
+          schema:
+            type: string
+      operationId: getProductsById
+      responses:
+        200:
+          description: Busqueda exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        400:
+          description: Error buscando informacion
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        default:
+          $ref: "#/components/responses/Default"
+    
+  /v1/addProducts/:id:      
+    post:
+      tags:
+        - Products
+      summary: Agrega producto (solo Admin)
+      description: Agrega producto a la base de datos
+      operationId: addProducts
+      requestBody:
+        description: Agrega un producto
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      responses:
+        201:
+          description: Producto agregado correctamente
+        400:
+          description: Información incompleta o petición mal formulada
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        default:
+          $ref: "#/components/responses/Default"
+
+  /v1/updateProducts/:id:  
+    put:
+      tags:
+        - Products
+      summary: Actualiza producto (solo Admin)
+      description: Actualiza el estado de un producto por la identificacion
+      parameters:
+        - name: id
+          in: query
+          example: id=1
+          description: Necesitamos la identificacion del producto.
+          required: true
+          schema:
+            type: string
+      operationId: updateProducts
+      requestBody:
+        description: Modification data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      responses:
+        200:
+          description: Actualización satisfatoria
+        400:
+          description: No se pudo actualizar
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        default:
+          $ref: "#/components/responses/Default"
+
+  /v1/deleteProducts/:id:  
+    delete:
+      tags:
+        - Products
+      summary: Elimina un producto (solo Admin)
+      description: Elimina el producto por la identificacion
+      parameters:
+        - name: id
+          in: query
+          example: id=1
+          description: Necesitamos la identificacion del producto.
+          required: true
+          schema:
+            type: string
+      operationId: deleteProducts
+      responses:
+        200:
+          description: "Producto eliminado por id ${id}"
+        400:
+          description: No se puede eliminar producto con id:${id}
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        406:
+          description: No se puede eliminar
+        default:
+          $ref: "#/components/responses/Default"
+
+          
+#COMPONENTES
+components:
+  schemas:
+    createUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 3
+        username:
+          type: string
+          example: lola
+        password:
+          type: string
+          example: mento123
+        full_name:
+          type: string
+          example: lola mento
+        email:
+          type: string
+          example: lolamento@gmail.com
+        phone:
+          type: integer
+          example: 8472490
+        delivery_address:
+          type: string
+          example: Carrera 48 nro 68 83
+    updateUser:
+      type: object
+      properties:
+        username:
+          type: string
+          example: lola
+        password:
+          type: string
+          example: mento123
+        full_name:
+          type: string
+          example: lola mento
+        email:
+          type: string
+          example: lolamento@gmail.com
+        phone:
+          type: integer
+          example: 8472490
+        delivery_address:
+          type: string
+          example: Carrera 48 nro 68 83
+          
+    login:
+      type: object
+      properties:
+        username:
+          type: string
+          example: lola
+        password:
+          type: string
+          example: mento1234
+#Schema-Products
+    Product:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Hamburguesa
+        price:
+          type: number
+          example: 20000
+        img_url:
+          type: string
+          example: https://lahamburguesa.com/hm.jpg
+        description:
+          type: string
+          example: hamburguesa con doble carne
+          
+    Product2:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Hamburguesa clasica
+        price:
+          type: number
+          example: 22000
+        img_url:
+          type: string
+          example: https://lahamburguesa.com/hm.jpg
+        description:
+          type: string
+          example: hamburguesa con doble carne
+    Products:
+      type: object
+      properties:
+        1:
+          type: object
+          $ref: "#/components/schemas/Product"
+        2:
+          type: object
+          $ref: "#/components/schemas/Product2"
+    
+#schema-Orders_Products
+    OrderProduct:
+      type: object
+      properties:
+        order_prod_id:
+          type: integer
+          example: 1
+        order_id:
+          type: integer
+          example: 3
+        product_id:
+          type: integer
+          example: 2
+        product_amount:
+          type: integer
+          example: 5
+
+    
+#schema-Orders
+    Order:
+      type: object
+      properties:
+        order_id:
+          type: integer
+          example: 1
+        status:
+          type: string
+          example: new
+        date:
+          type: string
+          format: date-time
+          example: "2020-10-29T10:11:12Z"
+        description:
+          type: string
+          example: "2x hamburguesa clasica"
+        payment_method:
+          type: string
+          example: "Efectivo"
+        total:
+          type: integer
+          example: 42000
+        user_id:
+          type: integer
+          example: 1
+
+    addOrder:
+      type: object
+      properties:
+        payment_method:
+          type: string
+          example: cash
+        products:
+          type: array
+          items:
+            type: object
+            properties:
+              product_id:
+                type: integer
+                example: 1
+              amount:
+                type: integer
+                example: 3
+    updateOrder:
+      type: object
+      properties:
+        status:
+          type: string
+          example: Entregada
+                
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "An error has ocurred: <error>"
+      required:
+        - error
+    Send:
+      type: string
+      example: "Error message"
+      
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # Reused Responses
+  responses:
+    UnauthorizedError:
+      description: Invalid Token
+    Disabled:
+      description: Invalid request, user account is disabled
+    NotAdmin:
+      description: Operation forbidden, not an admin
+    NotFound:
+      description: The specified resource was not found
+    Default:
+      description: Unexpected error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/Send"
+          examples:
+            Token Invalidation:
+              summary: Unauthorized - Invalid Token
+              value: Unauthorized - Invalid Token
+            Disabled Account:
+              summary: Unauthorized - Account is Disabled
+              value: Unauthorized - User account is disabled
+    UnauthorizedAdmin:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/Send"
+          examples:
+            Token Invalidation:
+              summary: Unauthorized - Invalid Token
+              value: Unauthorized - Invalid Token
+            Disabled Account:
+              summary: Unauthorized - Account is Disabled
+              value: Unauthorized - User account is disabled
+            Not Admin:
+              summary: Unauthorized - Not an admin
+              value: Unauthorized - Not an admin
+              
+    products:
+      description: Productos
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/Product'
+security:
+  - bearerAuth: []
